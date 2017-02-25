@@ -27,14 +27,18 @@ class Notifier:
                     websocket.send(await self._fetch(websocket))
                 except websockets.ConnectionClosed:  # Client dismissed
                     break
-        else:
-            self._register(websocket)
+        elif self._register(websocket):
+            while True:
+                try:
+                    websocket.send(await self._fetch(websocket))
+                except websockets.ConnectionClosed:  # Client dismissed
+                    break
 
     async def _fetch(self, key):
         return await self.r.get(key)
 
     async def _register(self, websocket):
-        async with aiohttp.ClientSession().post(self.url) as resp:
+        async with aiohttp.ClientSession().get(self.url) as resp:
             valid = await resp.json()['ok']
             if valid:
                 self.connections.add(websocket)

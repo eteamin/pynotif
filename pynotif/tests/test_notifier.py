@@ -4,23 +4,38 @@ from http.server import HTTPServer
 
 from websocket import create_connection
 
+from pynotif.src.notifier import Notifier
 from pynotif.tests.helpers import RequestHandler
 
 
 class TestCase(unittest.TestCase):
     def setUp(self):
+        self.http_server_address = ('127.0.0.1', 8081)
+        self.socket_server_address = ('127.0.0.1', 8082)
+        self.db = 15
+
         http_server = Thread(target=self._http_server)
         http_server.daemon = True
+        http_server.start()
 
-        client_socket = Thread()
+        server_socket = Thread(target=self._server_socket)
+        server_socket.daemon = True
+        server_socket.start()
 
     def _http_server(self):
-        server_address = ('127.0.0.1', 8081)
-        httpd = HTTPServer(server_address, RequestHandler)
+        httpd = HTTPServer(self.http_server_address, RequestHandler)
         httpd.serve_forever()
 
-    def client_socket(self):
-        ws = create_connection("ws://echo.websocket.org/")
+    def _server_socket(self):
+        Notifier(
+            host=self.socket_server_address[0],
+            port=self.socket_server_address[1],
+            db=self.db,
+            url='{}:{}'.format(self.http_server_address[0], self.http_server_address[1])
+        )
+
+    def test_client_socket(self):
+        ws = create_connection('{}:{}'.format(self.http_server_address[0], self.http_server_address[1]))
         ws.send("Hello, World")
-        result = ws.recv()
+        assert ws.recv() is not None
         ws.close()
