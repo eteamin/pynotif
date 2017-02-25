@@ -32,6 +32,7 @@ class Notifier:
                 try:
                     websocket.send(await self._fetch(websocket))
                 except websockets.ConnectionClosed:  # Client dismissed
+                    self._un_register(websocket)
                     break
 
     async def _fetch(self, key):
@@ -45,6 +46,4 @@ class Notifier:
                 return True
 
     async def _un_register(self, websocket):
-        pass
-
-
+        self.connections.remove(websocket)
