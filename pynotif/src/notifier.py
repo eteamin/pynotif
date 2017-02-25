@@ -16,11 +16,11 @@ class Notifier:
         self._make_server()
 
     def _make_server(self):
-        start_server = websockets.serve(self.handler, self.host, self.port)
+        start_server = websockets.serve(self._handler, self.host, self.port)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
-    async def handler(self, websocket, path):
+    async def _handler(self, websocket, path):
         if websocket in self.connections:
             while True:
                 try:
