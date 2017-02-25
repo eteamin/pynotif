@@ -1,16 +1,24 @@
 import unittest
-import asyncio
-import subprocess
+import threading
 
-import websockets
+from pynotif.src.notifier import Notifier
 
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        # Create the sandbox websocket server
-        self.start_server = websockets.serve(self.sandbox_server)
-        # Do notif insertion
-        pass
+        # Create the sandbox websocket server using the test db (15)
+        self.db = 15
+        self.host = '127.0.0.1'
+        self.port = 6767
+        self.thread = threading.Thread(target=self.sandbox)
+        self.thread.daemon = True
+        self.thread.start()
+
+        # Push some data
+        
+
+    def sandbox(self):
+        Notifier(self.host, self.port, self.db)
 
     def test_notifier(self):
-        pass
+        print(self.thread.getName())
