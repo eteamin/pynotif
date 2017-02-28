@@ -6,13 +6,15 @@ import asyncio_redis
 
 
 class Notifier:
-    def __init__(self, host, port, db, url):
+    def __init__(self, host, port, db, server_url, config):
         self.host = host
         self.port = port
         self.db = db
-        self.url = url
+        self.url = server_url
+        self.config = config
         self.r = yield from asyncio_redis.Connection.create(host=self.host, port=self.port, db=self.db)
-        self.connections = set()
+        self.connections = {}  # Key: client_id, Value = websocket
+        self.pending_notifs = {}  # In case client has dismissed for a while
         self._make_server()
 
     def _make_server(self):
@@ -39,6 +41,7 @@ class Notifier:
         return await self.r.get(key)
 
     async def _register(self, websocket):
+        data = websocket.recv()
         async with aiohttp.ClientSession().get(self.url) as resp:
             valid = await resp.json()['ok']
             if valid:
@@ -47,3 +50,8 @@ class Notifier:
 
     async def _un_register(self, websocket):
         self.connections.remove(websocket)
+
+
+    async def _headers(self):
+        pass
+
