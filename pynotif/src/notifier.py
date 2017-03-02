@@ -5,8 +5,6 @@ import aiohttp
 import websockets
 from redis import StrictRedis
 
-from . import AsyncListOfTupleIteration
-
 
 class Notifier:
     def __init__(self, ws_server, db, http_server_url, config):
@@ -17,9 +15,8 @@ class Notifier:
         self.config = config
         self.connections = {}  # Key: client_id, Value = websocket
         self.pending_notifs = {}  # In case client has dismissed for a while
-        self._setup()
 
-    def _setup(self):
+    def setup(self):
         start_server = websockets.serve(self._handler, self.host, self.port)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -30,13 +27,13 @@ class Notifier:
         if websocket not in self.connections:
             if not await self._register(websocket):
                 return
-        account = await self.key_from_value(websocket)
+        account = self.connections.get(websocket)
         while True:
             notif = await self._fetch(account)
             try:
                 await websocket.send(notif)
             except websockets.ConnectionClosed:  # Client dismissed
-                self._un_register(websocket)
+                await self._un_register(websocket)
                 break
 
     async def _fetch(self, key):
@@ -48,22 +45,14 @@ class Notifier:
             r = await resp.json()
             if await self._ensure_validity(r):
                 account = r.get('account')
-                self.connections[account] = websocket
+                self.connections[websocket] = account
                 return True
 
     async def _un_register(self, websocket):
-        account = self.key_from_value(websocket)
-        del self.connections[account]
+        del self.connections[websocket]
 
     async def _headers(self):
         pass
-
-    async def key_from_value(self, value):
-        key = None
-        async for k, v in AsyncListOfTupleIteration(self.connections.items()):
-            if v == value:
-                key = k
-        return key
 
     @staticmethod
     async def _ensure_validity(data):

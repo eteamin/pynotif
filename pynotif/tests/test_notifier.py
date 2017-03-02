@@ -39,14 +39,16 @@ class TestCase(unittest.TestCase):
         httpd.serve_forever()
 
     def _server_socket(self):
-        Notifier(
+        n = Notifier(
             ws_server=self.config.get('ws_server'),
             db=self.config.get('db'),
             http_server_url=self.config.get('http_server'),
             config=None
         )
+        n.setup()
 
     def test_client_socket(self):
+        time.sleep(1)  # Wait for the ws to run
         ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
         fake_identity = {
             "account": 1000,
@@ -55,6 +57,6 @@ class TestCase(unittest.TestCase):
         # Register
         ws.send(str(fake_identity))
         # Fetch notif
-        notif = ws.recv()
+        notif = ws.recv().decode('utf-8')
         assert notif == 'Notification'
         ws.close()
