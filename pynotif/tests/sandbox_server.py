@@ -24,8 +24,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            message = dict(ok=True, account=self.valid_info['account'])
-            self.wfile.write(bytes(str(message), "utf8"))
+            message = '{"ok":"True", "account":"%s"}' % self.valid_info['account']
+            self.wfile.write(bytes(message, "utf8"))
             return
 
     def _store_notification(self):

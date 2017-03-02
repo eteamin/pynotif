@@ -2,6 +2,7 @@ import unittest
 import json
 from os import path
 from threading import Thread
+import time
 from http.server import HTTPServer
 
 from websocket import create_connection
@@ -55,4 +56,5 @@ class TestCase(unittest.TestCase):
         ws.send(str(fake_identity))
         # Fetch notif
         notif = ws.recv()
+        assert notif == 'Notification'
         ws.close()

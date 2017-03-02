@@ -30,9 +30,10 @@ class Notifier:
         if websocket not in self.connections:
             if not await self._register(websocket):
                 return
+        account = await self.key_from_value(websocket)
         while True:
             try:
-                await websocket.send(await self._fetch(websocket))
+                await websocket.send(await self._fetch(account))
             except websockets.ConnectionClosed:  # Client dismissed
                 self._un_register(websocket)
                 break
@@ -50,15 +51,19 @@ class Notifier:
                 return True
 
     async def _un_register(self, websocket):
-        key = None
-        async for k, v in AsyncListOfTupleIteration(self.connections.items()):
-            if v == websocket:
-                key = k
-        del self.connections[key]
+        account = self.key_from_value(websocket)
+        del self.connections[account]
 
     async def _headers(self):
         pass
 
+    async def key_from_value(self, value):
+        key = None
+        async for k, v in AsyncListOfTupleIteration(self.connections.items()):
+            if v == value:
+                key = k
+        return key
+
     @staticmethod
     async def _ensure_validity(data):
-        return True if data.get('ok') is True and data.get('account') else False
+        return True if bool(data.get('ok')) is True and data.get('account') else False
