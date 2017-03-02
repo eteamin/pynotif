@@ -5,6 +5,7 @@ import aiohttp
 import websockets
 from redis import StrictRedis
 
+from . import AsyncListOfTupleIteration
 
 class Notifier:
     def __init__(self, host, port, db, server_url, config):
@@ -47,14 +48,17 @@ class Notifier:
         data = await websocket.recv()
         async with aiohttp.ClientSession().post('http://{}'.format(self.url), data=data) as resp:
             r = await resp.text()
-            if self._ensure_validity(r):
+            if await self._ensure_validity(r):
                 account = r.get('account')
-                self.connections.add(websocket)
+                self.connections[account] = websocket
                 return True
 
     async def _un_register(self, websocket):
-        # self.connections.remove(websocket)
-        pass
+        key = None
+        async for k, v in AsyncListOfTupleIteration(self.connections.items()):
+            if v == websocket:
+                key = k
+        del self.connections[key]
 
     async def _headers(self):
         pass
