@@ -31,11 +31,16 @@ class TestCase(unittest.TestCase):
             host=self.socket_server_address[0],
             port=self.socket_server_address[1],
             db=self.db,
-            url='{}:{}'.format(self.http_server_address[0], self.http_server_address[1])
+            server_url='{}:{}'.format(self.http_server_address[0], self.http_server_address[1]),
+            config=None
         )
 
     def test_client_socket(self):
-        ws = create_connection('{}:{}'.format(self.http_server_address[0], self.http_server_address[1]))
-        ws.send("Hello, World")
+        ws = create_connection('ws://{}:{}'.format(self.socket_server_address[0], self.socket_server_address[1]))
+        fake_identity = {
+            "account": 1000,
+            "session": "fake_session"
+        }
+        ws.send(str(fake_identity))
         assert ws.recv() is not None
         ws.close()
