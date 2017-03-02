@@ -1,18 +1,22 @@
 import unittest
+import json
+from os import path
 from threading import Thread
 from http.server import HTTPServer
 
 from websocket import create_connection
 
+import pynotif
 from pynotif.src.notifier import Notifier
 from pynotif.tests.helpers import RequestHandler
+
+PATH_TO_CONFIG = path.abspath(path.join(path.dirname(pynotif.__file__), 'test.json'))
 
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        self.http_server_address = ('127.0.0.1', 8081)
-        self.socket_server_address = ('127.0.0.1', 8082)
-        self.db = 15
+        self.config = None
+        self._load_config()
 
         http_server = Thread(target=self._http_server)
         http_server.daemon = True
@@ -22,21 +26,24 @@ class TestCase(unittest.TestCase):
         server_socket.daemon = True
         server_socket.start()
 
+    def _load_config(self):
+        with open(PATH_TO_CONFIG, 'r') as conf:
+            self.config = json.load(conf)
+
     def _http_server(self):
-        httpd = HTTPServer(self.http_server_address, RequestHandler)
+        httpd = HTTPServer(self.config.get('http_server'), RequestHandler)
         httpd.serve_forever()
 
     def _server_socket(self):
         Notifier(
-            host=self.socket_server_address[0],
-            port=self.socket_server_address[1],
-            db=self.db,
-            server_url='{}:{}'.format(self.http_server_address[0], self.http_server_address[1]),
+            ws_server=self.config.get('ws_server'),
+            db=self.config.get('db'),
+            http_server_url=self.config.get('http_server'),
             config=None
         )
 
     def test_client_socket(self):
-        ws = create_connection('ws://{}:{}'.format(self.socket_server_address[0], self.socket_server_address[1]))
+        ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
         fake_identity = {
             "account": 1000,
             "session": "fake_session"

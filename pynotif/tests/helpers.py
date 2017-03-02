@@ -1,6 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import json
 
+import redis
+
 
 class RequestHandler(BaseHTTPRequestHandler):
 
@@ -18,3 +20,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             message = dict(ok=True, account=valid_info['account'])
             self.wfile.write(bytes(str(message), "utf8"))
             return
+
+    def store_notification(self):
+        r = redis.StrictRedis()

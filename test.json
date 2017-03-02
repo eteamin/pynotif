@@ -1,0 +1,5 @@
+{
+  "http_server": "localhost:8181",
+  "ws_server": "localhost:8282",
+  "db": 15
+}
