@@ -8,16 +8,19 @@ from websocket import create_connection
 
 import pynotif
 from pynotif.src.notifier import Notifier
-from pynotif.tests.helpers import RequestHandler
+from pynotif.tests.sandbox_server import RequestHandler
 
-PATH_TO_CONFIG = path.abspath(path.join(path.dirname(pynotif.__file__), 'test.json'))
+PATH_TO_CONFIG = path.abspath(path.join(path.dirname(pynotif.__file__), '..', 'test.json'))
 
 
 class TestCase(unittest.TestCase):
     def setUp(self):
         self.config = None
         self._load_config()
-
+        self.http_server = (
+            self.config.get('http_server').split(':')[0],
+            int(self.config.get('http_server').split(':')[1])
+        )
         http_server = Thread(target=self._http_server)
         http_server.daemon = True
         http_server.start()
@@ -31,7 +34,7 @@ class TestCase(unittest.TestCase):
             self.config = json.load(conf)
 
     def _http_server(self):
-        httpd = HTTPServer(self.config.get('http_server'), RequestHandler)
+        httpd = HTTPServer(self.http_server, RequestHandler)
         httpd.serve_forever()
 
     def _server_socket(self):
@@ -48,6 +51,8 @@ class TestCase(unittest.TestCase):
             "account": 1000,
             "session": "fake_session"
         }
+        # Register
         ws.send(str(fake_identity))
-        assert ws.recv() is not None
+        # Fetch notif
+        notif = ws.recv()
         ws.close()

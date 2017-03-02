@@ -43,7 +43,7 @@ class Notifier:
     async def _register(self, websocket):
         data = await websocket.recv()
         async with aiohttp.ClientSession().post('http://{}'.format(self.url), data=data) as resp:
-            r = await resp.text()
+            r = await resp.json()
             if await self._ensure_validity(r):
                 account = r.get('account')
                 self.connections[account] = websocket
@@ -61,8 +61,4 @@ class Notifier:
 
     @staticmethod
     async def _ensure_validity(data):
-        try:
-            payload = json.dumps(data)
-            return True if payload.get('ok') is True and payload.get('account') else False
-        except json.JSONDecodeError:
-            return False
+        return True if data.get('ok') is True and data.get('account') else False

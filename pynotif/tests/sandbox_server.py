@@ -6,7 +6,7 @@ import pynotif
 import redis
 
 
-PATH_TO_CONFIG = path.abspath(path.join(path.dirname(pynotif.__file__), 'test.json'))
+PATH_TO_CONFIG = path.abspath(path.join(path.dirname(pynotif.__file__), '..', 'test.json'))
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -19,8 +19,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             'session': 'fake_session'
         }
         self._load_config()
-        self._store_notification()
         if json_info == self.valid_info:
+            self._store_notification()  # Meanwhile a notif is set
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
