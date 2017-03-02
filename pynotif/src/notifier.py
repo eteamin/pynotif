@@ -25,7 +25,7 @@ class Notifier:
         asyncio.set_event_loop(loop)
         loop.run_until_complete(start_server)
         loop.run_forever()
-
+    # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
             if not await self._register(websocket):
@@ -59,7 +59,8 @@ class Notifier:
     async def _headers(self):
         pass
 
-    async def _ensure_validity(self, data):
+    @staticmethod
+    async def _ensure_validity(data):
         try:
             payload = json.dumps(data)
             return True if payload.get('ok') is True and payload.get('account') else False

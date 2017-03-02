@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 testpkgs = [
-
+    'websocket-client'
 ]
 install_requires = [
     'redis',
