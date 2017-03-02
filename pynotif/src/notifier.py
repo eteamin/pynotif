@@ -32,8 +32,9 @@ class Notifier:
                 return
         account = await self.key_from_value(websocket)
         while True:
+            notif = await self._fetch(account)
             try:
-                await websocket.send(await self._fetch(account))
+                await websocket.send(notif)
             except websockets.ConnectionClosed:  # Client dismissed
                 self._un_register(websocket)
                 break
