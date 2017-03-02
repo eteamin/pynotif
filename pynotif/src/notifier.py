@@ -12,7 +12,7 @@ class Notifier:
     def __init__(self, ws_server, db, http_server_url, config):
         self.host, self.port = ws_server.split(':')
         self.db = db
-        self.r = StrictRedis(host=self.host, port=self.port, db=self.db)
+        self.r = StrictRedis(db=self.db)
         self.url = http_server_url
         self.config = config
         self.connections = {}  # Key: client_id, Value = websocket
