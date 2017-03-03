@@ -13,4 +13,5 @@ def load_config():
 
 
 def load_app():
+    pass
 
