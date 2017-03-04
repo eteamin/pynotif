@@ -50,12 +50,12 @@ class TestCase(unittest.TestCase):
         }
 
         ws = create_connection('ws://{}'.format(self.config.get('ws_server')), header=fake_identity)
-        notif = ws.recv().decode()
+        notif = ws.recv()
         assert notif == 'Notification'
         ws.close()
 
         # No auth
         ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
         notif = ws.recv()
-        assert notif == ''
+        assert notif == 'Auth failed!'
         ws.close()

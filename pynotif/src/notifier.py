@@ -31,12 +31,14 @@ class Notifier:
             acc = websocket.request_headers.get('account')
             sess = websocket.request_headers.get('session')
             if not acc or not sess:
+                await websocket.send("Auth failed!")
                 return
             self.headers = {
                 'account': acc,
                 'session': sess,
             }
             if not await self._register(websocket):
+                await websocket.send("Auth failed!")
                 return
         account = self.connections.get(websocket)
         while True:
@@ -51,11 +53,10 @@ class Notifier:
         while True:
             value = self.r.get(key)
             if not value:
-                print(value)
                 await asyncio.sleep(15)
                 continue
             self.r.delete(key)
-            return value
+            return value.decode()
 
     # Handle your own registration logic, either call an API or whatever
     async def _register(self, websocket):
