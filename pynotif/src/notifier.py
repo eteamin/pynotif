@@ -27,13 +27,12 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
-            headers = {
+            self.headers = {
                 'account': websocket.request_headers.get('account'),
                 'session': websocket.request_headers.get('session'),
             }
-            if not await self._register(websocket, headers):
+            if not await self._register(websocket):
                 return
-        print("new valid conn")
         account = self.connections.get(websocket)
         while True:
             notif = await self._fetch(account)
@@ -44,13 +43,22 @@ class Notifier:
                 break
 
     async def _fetch(self, key):
-        return self.r.get(key)
+        while True:
+            value = self.r.get(key)
+            if not value:
+                print(value)
+                await asyncio.sleep(15)
+                continue
+            self.r.delete(key)
+            return value
 
-    async def _register(self, websocket, headers):
-        async with aiohttp.ClientSession().post('http://{}'.format(self.url), headers=await self._headers(headers)) as resp:
+    async def _register(self, websocket):
+        async with aiohttp.\
+                ClientSession().\
+                post('http://{}'.format(self.url), headers=await self._headers(self.headers)) as resp:
             r = await resp.json()
             if await self._ensure_validity(r):
-                account = r.get('account')
+                account = self.headers.get('account')
                 self.connections[websocket] = account
                 return True
 
@@ -70,4 +78,4 @@ class Notifier:
 
     @staticmethod
     async def _ensure_validity(data):
-        return True if bool(data.get('ok')) is True and data.get('account') else False
+        return True if bool(data.get('ok')) is True else False
