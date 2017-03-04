@@ -48,7 +48,14 @@ class TestCase(unittest.TestCase):
             "account": str(1000),
             "session": "fake_session"
         }
+
         ws = create_connection('ws://{}'.format(self.config.get('ws_server')), header=fake_identity)
         notif = ws.recv().decode()
         assert notif == 'Notification'
+        ws.close()
+
+        # No auth
+        ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
+        notif = ws.recv()
+        assert notif == ''
         ws.close()

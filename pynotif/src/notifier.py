@@ -27,9 +27,13 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
+            acc = websocket.request_headers.get('account')
+            sess = websocket.request_headers.get('session')
+            if not acc or not sess:
+                return
             self.headers = {
-                'account': websocket.request_headers.get('account'),
-                'session': websocket.request_headers.get('session'),
+                'account': acc,
+                'session': sess,
             }
             if not await self._register(websocket):
                 return
