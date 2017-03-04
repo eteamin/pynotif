@@ -10,6 +10,7 @@ install_requires = [
     'redis',
     'aiohttp',
     'websockets',
+    "pyDes"
 ]
 
 setup(

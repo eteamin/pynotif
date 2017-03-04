@@ -44,14 +44,11 @@ class TestCase(unittest.TestCase):
 
     def test_client_socket(self):
         time.sleep(1)  # Wait for the ws to run
-        ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
         fake_identity = {
-            "account": 1000,
+            "account": str(1000),
             "session": "fake_session"
         }
-        # Register
-        ws.send(str(fake_identity))
-        # Fetch notif
-        notif = ws.recv().decode('utf-8')
+        ws = create_connection('ws://{}'.format(self.config.get('ws_server')), header=fake_identity)
+        notif = ws.recv().decode()
         assert notif == 'Notification'
         ws.close()

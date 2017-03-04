@@ -1,5 +1,7 @@
 {
   "http_server": "192.168.1.101:8080/authenticate_ws_client",
   "ws_server": "192.168.1.101:8282",
-  "db": 15
+  "db": 15,
+  "auth_secret_key": "b5ad2d8123e8809bba576cfa",
+  "auth_message": "I am authorized"
 }

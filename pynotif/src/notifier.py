@@ -1,5 +1,7 @@
 import asyncio
+from base64 import b64encode
 
+from pyDes import triple_des
 import aiohttp
 import websockets
 from redis import StrictRedis
@@ -7,10 +9,11 @@ from redis import StrictRedis
 
 class Notifier:
     def __init__(self, config):
-        self.host, self.port = config.get('ws_server').split(':')
-        self.db = config.get('db')
+        self.config = config
+        self.host, self.port = self.config.get('ws_server').split(':')
+        self.db = self.config.get('db')
         self.r = StrictRedis(db=self.db)
-        self.url = config.get('http_server')
+        self.url = self.config.get('http_server')
         self.connections = {}  # Key: client_id, Value = websocket
         self.pending_notifs = {}  # In case client has dismissed for a while
 
@@ -24,14 +27,13 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
-            payload = {
+            headers = {
                 'account': websocket.request_headers.get('account'),
                 'session': websocket.request_headers.get('session'),
             }
-            if not await self._register(websocket, payload):
+            if not await self._register(websocket, headers):
                 return
         print("new valid conn")
-        await websocket.send("Hello")
         account = self.connections.get(websocket)
         while True:
             notif = await self._fetch(account)
@@ -44,13 +46,24 @@ class Notifier:
     async def _fetch(self, key):
         return self.r.get(key)
 
-    async def _register(self, websocket, data):
-        async with aiohttp.ClientSession().post('http://{}'.format(self.url), data=data) as resp:
+    async def _register(self, websocket, headers):
+        async with aiohttp.ClientSession().post('http://{}'.format(self.url), headers=await self._headers(headers)) as resp:
             r = await resp.json()
             if await self._ensure_validity(r):
                 account = r.get('account')
                 self.connections[websocket] = account
                 return True
+
+    async def _headers(self, headers):
+        return {
+            'session': headers.get('session'),
+            'account': headers.get('account'),
+            'token': str(b64encode(
+                bytes(
+                    triple_des(self.config.get('auth_secret_key')).encrypt(self.config.get('auth_message'), padmode=2)
+                )
+            ))
+        }
 
     async def _un_register(self, websocket):
         del self.connections[websocket]
