@@ -1,5 +1,5 @@
 {
-  "http_server": "localhost:8080/authenticate_ws_client",
-  "ws_server": "localhost:8282",
+  "http_server": "192.168.1.101:8080/authenticate_ws_client",
+  "ws_server": "192.168.1.101:8282",
   "db": 15
 }

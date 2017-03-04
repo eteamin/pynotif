@@ -24,7 +24,11 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
-            if not await self._register(websocket):
+            payload = {
+                'account': websocket.request_headers.get('account'),
+                'session': websocket.request_headers.get('session'),
+            }
+            if not await self._register(websocket, payload):
                 return
         account = self.connections.get(websocket)
         while True:
@@ -38,8 +42,7 @@ class Notifier:
     async def _fetch(self, key):
         return self.r.get(key)
 
-    async def _register(self, websocket):
-        data = await websocket.recv()
+    async def _register(self, websocket, data):
         async with aiohttp.ClientSession().post('http://{}'.format(self.url), data=data) as resp:
             r = await resp.json()
             if await self._ensure_validity(r):
@@ -49,9 +52,6 @@ class Notifier:
 
     async def _un_register(self, websocket):
         del self.connections[websocket]
-
-    async def _headers(self):
-        pass
 
     @staticmethod
     async def _ensure_validity(data):
