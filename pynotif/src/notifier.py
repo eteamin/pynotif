@@ -66,6 +66,7 @@ class Notifier:
                 self.connections[websocket] = account
                 return True
 
+    # Handle your own header authentication
     async def _headers(self, headers):
         return {
             'session': headers.get('session'),
