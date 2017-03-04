@@ -39,13 +39,8 @@ class TestCase(unittest.TestCase):
         httpd.serve_forever()
 
     def _server_socket(self):
-        n = Notifier(
-            ws_server=self.config.get('ws_server'),
-            db=self.config.get('db'),
-            http_server_url=self.config.get('http_server'),
-            config=None
-        )
-        n.setup()
+        n = Notifier(config=self.config)
+        n.serve()
 
     def test_client_socket(self):
         time.sleep(1)  # Wait for the ws to run

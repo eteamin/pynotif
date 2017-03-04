@@ -13,5 +13,9 @@ def load_config():
 
 
 def load_app():
-    pass
+    conf = load_config()
+    n = Notifier(config=conf)
+    n.serve()
 
+
+load_app()

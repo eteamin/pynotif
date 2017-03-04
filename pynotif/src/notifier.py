@@ -6,21 +6,21 @@ from redis import StrictRedis
 
 
 class Notifier:
-    def __init__(self, ws_server, db, http_server_url, config):
-        self.host, self.port = ws_server.split(':')
-        self.db = db
+    def __init__(self, config):
+        self.host, self.port = config.get('ws_server').split(':')
+        self.db = config.get('db')
         self.r = StrictRedis(db=self.db)
-        self.url = http_server_url
-        self.config = config
+        self.url = config.get('http_server')
         self.connections = {}  # Key: client_id, Value = websocket
         self.pending_notifs = {}  # In case client has dismissed for a while
 
-    def setup(self):
+    def serve(self):
         start_server = websockets.serve(self._handler, self.host, self.port)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(start_server)
         loop.run_forever()
+
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
