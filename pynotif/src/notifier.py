@@ -30,6 +30,8 @@ class Notifier:
             }
             if not await self._register(websocket, payload):
                 return
+        print("new valid conn")
+        await websocket.send("Hello")
         account = self.connections.get(websocket)
         while True:
             notif = await self._fetch(account)
