@@ -27,6 +27,7 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         if websocket not in self.connections:
+            # Client appends the account and the session to the headers for authentication purposes
             acc = websocket.request_headers.get('account')
             sess = websocket.request_headers.get('session')
             if not acc or not sess:
@@ -56,6 +57,7 @@ class Notifier:
             self.r.delete(key)
             return value
 
+    # Handle your own registration logic, either call an API or whatever
     async def _register(self, websocket):
         async with aiohttp.\
                 ClientSession().\
