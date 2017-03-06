@@ -17,5 +17,4 @@ def load_app():
     n = Notifier(config=conf)
     n.serve()
 
-
 load_app()

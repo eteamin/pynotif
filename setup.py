@@ -4,13 +4,14 @@ from setuptools import setup, find_packages
 
 
 testpkgs = [
-    'websocket-client'
+    'websocket-client',
+    'redis',
 ]
 install_requires = [
-    'redis',
     'aiohttp',
     'websockets',
-    "pyDes"
+    'pyDes',
+    'asyncio-redis'
 ]
 
 setup(

@@ -4,7 +4,7 @@ from base64 import b64encode
 from pyDes import triple_des
 import aiohttp
 import websockets
-from redis import StrictRedis
+import asyncio_redis
 
 
 class Notifier:
@@ -12,7 +12,6 @@ class Notifier:
         self.config = config
         self.host, self.port = self.config.get('ws_server').split(':')
         self.db = self.config.get('db')
-        self.r = StrictRedis(db=self.db)
         self.url = self.config.get('http_server')
         self.connections = {}  # Key: client_id, Value = websocket
         self.pending_notifs = {}  # In case client has dismissed for a while
@@ -26,6 +25,7 @@ class Notifier:
 
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
+        self.r = await asyncio_redis.Connection.create(db=self.db)
         if websocket not in self.connections:
             # Client appends the account and the session to the headers for authentication purposes
             acc = websocket.request_headers.get('account')
@@ -44,6 +44,7 @@ class Notifier:
         while True:
             notif = await self._fetch(account)
             try:
+                print('Sending {}'.format(notif))
                 await websocket.send(notif)
             except websockets.ConnectionClosed:  # Client dismissed
                 await self._un_register(websocket)
@@ -51,12 +52,12 @@ class Notifier:
 
     async def _fetch(self, key):
         while True:
-            value = self.r.get(key)
+            value = await self.r.get(key)
             if not value:
                 await asyncio.sleep(15)
                 continue
-            self.r.delete(key)
-            return value.decode()
+            await self.r.delete([key])
+            return value
 
     # Handle your own registration logic, either call an API or whatever
     async def _register(self, websocket):
