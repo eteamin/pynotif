@@ -54,6 +54,14 @@ class TestCase(unittest.TestCase):
         assert notif == 'Notification'
         ws.close()
 
+        """ Testing pending notifications. RequestHandler stores two notifications, but since we close the ws connection
+        after receiving the first one, the second one will be stored as pending notification """
+        # So we try yo connect and receive the pending notification
+        ws = create_connection('ws://{}'.format(self.config.get('ws_server')), header=fake_identity)
+        notif = ws.recv()
+        assert notif == 'Pending notification'
+        ws.close()
+
         # No auth
         ws = create_connection('ws://{}'.format(self.config.get('ws_server')))
         notif = ws.recv()

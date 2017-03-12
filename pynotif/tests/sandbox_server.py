@@ -16,13 +16,15 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         self._load_config()
         self._authorize()
-        self._store_notification()  # Meanwhile a notif is set
+        self._store_notification('Notification')  # Meanwhile a notif is set
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         message = '{"ok":"True", "account":"%s"}' % self.valid_info['account']
         self.wfile.write(bytes(message, "utf8"))
-        return
+
+        # Store a notification, notice that the client has dismissed and this is supposed to be a pending notification
+        self._store_notification('Pending notification')
 
     def _authorize(self):
         json_info = {
@@ -38,9 +40,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         assert auth_message == self.config.get('auth_message')
         assert json_info == self.valid_info
 
-    def _store_notification(self):
+    def _store_notification(self, notif):
         r = redis.StrictRedis(db=self.config.get('db'))
-        r.set(self.valid_info['account'], 'Notification')
+        r.set(self.valid_info['account'], notif)
 
     def _load_config(self):
         with open(PATH_TO_CONFIG, 'r') as conf:

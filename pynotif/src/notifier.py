@@ -26,6 +26,7 @@ class Notifier:
     # noinspection PyUnusedLocal
     async def _handler(self, websocket, path):
         self.r = await asyncio_redis.Connection.create(db=self.db)
+        # Not registered yet
         if websocket not in self.connections:
             # Client appends the account and the session to the headers for authentication purposes
             acc = websocket.request_headers.get('account')
@@ -33,20 +34,30 @@ class Notifier:
             if not acc or not sess:
                 await websocket.send("Auth failed!")
                 return
-            self.headers = {
+            headers = {
                 'account': acc,
                 'session': sess,
             }
-            if not await self._register(websocket):
+            if not await self._register(websocket, headers):
                 await websocket.send("Auth failed!")
                 return
         account = self.connections.get(websocket)
+        # Check to see if there are any pending notifications
+        if account in self.pending_notifs.keys():
+            async for acc, no in self.pending_notifs[account].items():
+                try:
+                    await websocket.send(no)
+                except websockets.ConnectionClosed:
+                    pass  # In case user dismisses again, to hell with him!!!
+            self.pending_notifs.pop(account)
         while True:
             notif = await self._fetch(account)
             try:
-                print('Sending {}'.format(notif))
                 await websocket.send(notif)
-            except websockets.ConnectionClosed:  # Client dismissed
+            except websockets.ConnectionClosed:  # Client dismissed, Store the pending notification and un_register him
+                self.pending_notifs[account] = [] if account not in self.pending_notifs.keys() else \
+                    self.pending_notifs[account]  # Check to see if user already has notification
+                self.pending_notifs[account].append(notif)
                 await self._un_register(websocket)
                 break
 
@@ -60,13 +71,13 @@ class Notifier:
             return value
 
     # Handle your own registration logic, either call an API or whatever
-    async def _register(self, websocket):
+    async def _register(self, websocket, headers):
         async with aiohttp.\
                 ClientSession().\
-                post('http://{}'.format(self.url), headers=await self._headers(self.headers)) as resp:
+                post('http://{}'.format(self.url), headers=await self._headers(headers)) as resp:
             r = await resp.json()
             if await self._ensure_validity(r):
-                account = self.headers.get('account')
+                account = headers.get('account')
                 self.connections[websocket] = account
                 return True
 
