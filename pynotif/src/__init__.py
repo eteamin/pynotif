@@ -1,5 +1,6 @@
 
-class AsyncListOfTupleIteration:
+
+class AsyncIterableList:
     def __init__(self, _list):
         self.list = _list
         self.i = 0

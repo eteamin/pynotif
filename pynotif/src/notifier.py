@@ -1,6 +1,8 @@
 import asyncio
 from base64 import b64encode
 
+from pynotif.src import AsyncIterableList
+
 from pyDes import triple_des
 import aiohttp
 import websockets
@@ -55,7 +57,7 @@ class Notifier:
             try:
                 await websocket.send(notif)
             except websockets.ConnectionClosed:  # Client dismissed, Store the pending notification and un_register him
-                self.pending_notifs[account] = [] if account not in self.pending_notifs.keys() else \
+                self.pending_notifs[account] = AsyncIterableList([]) if account not in self.pending_notifs.keys() else \
                     self.pending_notifs[account]  # Check to see if user already has notification
                 self.pending_notifs[account].append(notif)
                 await self._un_register(websocket)
