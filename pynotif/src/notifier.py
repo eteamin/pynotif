@@ -44,7 +44,7 @@ class Notifier:
         account = self.connections.get(websocket)
         # Check to see if there are any pending notifications
         if account in self.pending_notifs.keys():
-            async for acc, no in self.pending_notifs[account].items():
+            async for no in self.pending_notifs[account]:
                 try:
                     await websocket.send(no)
                 except websockets.ConnectionClosed:
