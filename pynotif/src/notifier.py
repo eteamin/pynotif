@@ -8,6 +8,7 @@ import aiohttp
 import websockets
 import asyncio_redis
 
+TIMEOUT = 15
 
 class Notifier:
     def __init__(self, config):
@@ -67,7 +68,7 @@ class Notifier:
         while True:
             value = await self.r.get(key)
             if not value:
-                await asyncio.sleep(15)
+                await asyncio.sleep(TIMEOUT)
                 continue
             await self.r.delete([key])
             return value
